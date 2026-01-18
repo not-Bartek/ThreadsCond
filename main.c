@@ -37,6 +37,42 @@ void set_handler(void (*f)(int), int sigNo)
         ERR("sigaction");
 }
 
+ssize_t bulk_read(int fd, char *buf, size_t count)
+{
+    int c;
+    size_t len = 0;
+    do
+    {
+        c = TEMP_FAILURE_RETRY(read(fd, buf, count));
+        if (c < 0)
+            return c;
+        if (c == 0)
+            return len;
+        buf += c;
+        len += c;
+        count -= c;
+    } while (count > 0);
+    return len;
+}
+
+ssize_t bulk_write(int fd, char *buf, size_t count)
+{
+    int c;
+    size_t len = 0;
+    do
+    {
+        c = TEMP_FAILURE_RETRY(write(fd, buf, count));
+        if (c < 0)
+            return c;
+        buf += c;
+        len += c;
+        count -= c;
+    } while (count > 0);
+    return len;
+}
+
+void cleanup(void *arg) { pthread_mutex_unlock((pthread_mutex_t *)arg); }
+
 int main() {
     return 0;
 }
